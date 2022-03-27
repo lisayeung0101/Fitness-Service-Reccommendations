@@ -1,0 +1,189 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+#import pandas
+import pandas as pd
+
+pd.set_option('display.max_rows', 250)
+
+#sources: https://www.kaggle.com/aadhavvignesh/calories-burned-during-exercise-and-activities
+calories = pd.read_csv('exercise_dataset.csv')
+print(calories)
+
+#take out only the activitiy and calories per kg column
+oldcols = ['Activity, Exercise or Sport (1 hour)','Calories per kg']
+newcols = ['Exercise', 'CpKG']
+dcols = dict(zip(oldcols,newcols))
+calories = calories[oldcols].copy()
+        
+calories = calories.rename(columns= dcols)
+print(calories)
+
+#strip out only the exercise type
+trial = calories.copy()
+new = trial['Exercise'].str.split(",", n = 1, expand = True)
+trial['Exercise Type'] = new[0]
+trial['Notuse'] = new[1]
+trial.drop(columns = ['Exercise'], inplace = True)
+trial.drop(columns = ['Notuse'], inplace = True)
+trial = trial[['Exercise Type', 'CpKG']]
+print(trial)
+
+#group the exercise into groups: sprint, gym, yoga, and other 
+trial = trial.groupby(['Exercise Type']).mean().reset_index()
+
+trial.loc[trial['Exercise Type'] == 'Cycling','Group']  = 'Sprint'
+trial.loc[trial['Exercise Type'] == 'Unicycling', 'Group'] = 'Sprint'
+trial.loc[trial['Exercise Type'] == 'Stationary cycling', 'Group'] = 'Sprint'
+trial.loc[trial['Exercise Type'] == 'Weight lifting', 'Group']  = 'Gym'
+trial.loc[trial['Exercise Type'] == 'Circuit training', 'Group'] = 'Gym'
+trial.loc[trial['Exercise Type'] == 'Rowing machine', 'Group'] = 'Gym'
+trial.loc[trial['Exercise Type'] == 'Calisthenics', 'Group'] = 'Gym'
+trial.loc[trial['Exercise Type'] == 'Health club exercise', 'Group'] = 'Gym'
+trial.loc[trial['Exercise Type'] == 'Running', 'Group'] = 'Gym'
+trial.loc[trial['Exercise Type'] == 'Stair machine', 'Group'] = 'Gym'
+trial.loc[trial['Exercise Type'] == 'Stretching', 'Group'] = 'Yoga'
+trial.loc[trial['Exercise Type'] == 'Mild stretching', 'Group'] = 'Yoga'
+
+trial.fillna('Other',inplace = True)
+
+#convert the calories per kg to calories per pound
+trial['CpKG'] = trial['CpKG'].apply(lambda x: x * 2.205)
+
+trial.rename(columns = {'CpKG':'Cal per LB'}, inplace = True)
+print(trial)
+
+# prompt the user on their preferred workout, weight, duration 
+# in order to calculate the estimated burnt calories 
+type_input = input('Please tell your preferred workout (Sprint, Gym, or Yoga) or Quit to back to the menu: ').strip().capitalize()
+while type_input != 'Quit':
+    
+    #Gym
+    if type_input == 'Gym':
+        print (trial[trial['Group'] == 'Gym'])
+        
+        exe_input = input('Please tell your preferred exercise type in Gym: ').strip().capitalize()
+        
+        if exe_input == 'Calisthenics':
+            print (trial[trial['Exercise Type'] == 'Calisthenics'])        
+            cal = int(trial['Cal per LB'].loc[15])
+            weight = int(input('Please Provide your weight in Lbs: ').strip().lower())
+            duration = int(input('PLease provide your intended duration workout (in minutes): '))
+            estimate = weight*duration*cal/60
+            print('Your will burn', estimate, 'Cals when you perform', duration, 'minutes', exe_input)
+
+        elif exe_input == 'Circuit training':
+            print (trial[trial['Exercise Type'] == 'Circuit training'])        
+            cal = int(trial['Cal per LB'].loc[25])
+            weight = int(input('Please Provide your weight in Lbs: ').strip().lower())
+            duration = int(input('PLease provide your intended duration workout (in minutes): '))
+            estimate = weight*duration*cal/60
+            print('Your will burn', estimate, 'Cals when you perform', duration, 'minutes', exe_input)
+            
+        elif exe_input == 'Health club exercise':
+            print (trial[trial['Exercise Type'] == 'Health club exercise'])        
+            cal = int(trial['Cal per LB'].loc[52])
+            weight = int(input('Please Provide your weight in Lbs: ').strip().lower())
+            duration = int(input('PLease provide your intended duration workout (in minutes): '))
+            estimate = weight*duration*cal/60
+            print('Your will burn', estimate, 'Cals when you perform', duration, 'minutes', exe_input)
+            
+        elif exe_input == 'Rowing machine':
+            print (trial[trial['Exercise Type'] == 'Rowing machine'])        
+            cal = int(trial['Cal per LB'].loc[96])
+            weight = int(input('Please Provide your weight in Lbs: ').strip().lower())
+            duration = int(input('PLease provide your intended duration workout (in minutes): '))
+            estimate = weight*duration*cal/60
+            print('Your will burn', estimate, 'Cals when you perform', duration, 'minutes', exe_input)
+    
+        elif exe_input == 'Running':
+            print (trial[trial['Exercise Type'] == 'Running'])        
+            cal = int(trial['Cal per LB'].loc[98]) 
+            weight = int(input('Please Provide your weight in Lbs: ').strip().lower())
+            duration = int(input('PLease provide your intended duration workout (in minutes): '))
+            estimate = weight*duration*cal/60
+            print('Your will burn', estimate, 'Cals when you perform', duration, 'minutes', exe_input)
+    
+        elif exe_input == 'Stair machine':
+            print (trial[trial['Exercise Type'] == 'Stair machine'])        
+            cal = int(trial['Cal per LB'].loc[119])  
+            weight = int(input('Please Provide your weight in Lbs: ').strip().lower())
+            duration = int(input('PLease provide your intended duration workout (in minutes): '))
+            estimate = weight*duration*cal/60
+            print('Your will burn', estimate, 'Cals when you perform', duration, 'minutes', exe_input)
+    
+        elif exe_input == 'Weight lifting':
+            print (trial[trial['Exercise Type'] == 'Weight lifting'])        
+            cal = int(trial['Cal per LB'].loc[163])
+            weight = int(input('Please Provide your weight in Lbs: ').strip().lower())
+            duration = int(input('PLease provide your intended duration workout (in minutes): '))
+            estimate = weight*duration*cal/60
+            print('Your will burn', estimate, 'Cals when you perform', duration, 'minutes', exe_input)
+    
+        else:
+            print ('Sorry we do not have other type available, please select again')
+        
+            
+    #Sprint        
+    elif type_input == 'Sprint':
+        print (trial[trial['Group'] == 'Sprint'])
+
+        exe_input = input('Please tell your preferred exercise type in Sprint: ').strip().capitalize()
+        
+        if exe_input == 'Cycling':
+            print (trial[trial['Exercise Type'] == 'Cycling'])        
+            cal = int(trial['Cal per LB'].loc[36])
+            weight = int(input('Please Provide your weight in Lbs: ').strip().lower())
+            duration = int(input('PLease provide your intended duration workout (in minutes): '))
+            estimate = weight*duration*cal/60
+            print('Your will burn', estimate, 'Cals when you perform', duration, 'minutes', exe_input)
+    
+        elif exe_input == 'Stationary cycling':
+            print (trial[trial['Exercise Type'] == 'Stationary cycling'])        
+            cal = int(trial['Cal per LB'].loc[121])
+            weight = int(input('Please Provide your weight in Lbs: ').strip().lower())
+            duration = int(input('PLease provide your intended duration workout (in minutes): '))
+            estimate = weight*duration*cal/60
+            print('Your will burn', estimate, 'Cals when you perform', duration, 'minutes', exe_input)
+    
+        elif exe_input == 'Unicycling':
+            print (trial[trial['Exercise Type'] == 'Unicycling'])        
+            cal = int(trial['Cal per LB'].loc[141])
+            weight = int(input('Please Provide your weight in Lbs: ').strip().lower())
+            duration = int(input('PLease provide your intended duration workout (in minutes): '))
+            estimate = weight*duration*cal/60
+            print('Your will burn', estimate, 'Cals when you perform', duration, 'minutes', exe_input)
+    
+        else:
+            print ('Sorry we do not have other type available, please select again')   
+            
+    #Yoga    
+    elif type_input == 'Yoga':
+        print (trial[trial['Group'] == 'Yoga'])
+         
+        exe_input = input('Please tell your preferred exercise type in Yoga: ').strip().capitalize()
+        
+        if exe_input == 'Mild stretching':
+            print (trial[trial['Exercise Type'] == 'Mild stretching'])        
+            #cal = (trial['Cal per LB'][trial['Exercise Type'] == 'Mild stretching'])
+            cal = int(trial['Cal per LB'].loc[73])
+            weight = int(input('Please Provide your weight in Lbs: ').strip().lower())
+            duration = int(input('PLease provide your intended duration workout (in minutes): '))
+            estimate = weight*duration*cal/60
+            print('Your will burn', estimate, 'Cals when you perform', duration, 'minutes', exe_input)
+    
+        elif exe_input == 'Stretching':
+            print (trial[trial['Exercise Type'] == 'Stretching'])        
+            cal = int(trial['Cal per LB'].loc[122])
+            weight = int(input('Please Provide your weight in Lbs: ').strip().lower())
+            duration = int(input('PLease provide your intended duration workout (in minutes): '))
+            estimate = weight*duration*cal/60
+            print('Your will burn', estimate, 'Cals when you perform', duration, 'minutes', exe_input)
+    
+        else:
+            print ('Sorry we do not have other type available, please select again')   
+            
+         
+    else:
+        print ('Sorry we do not have other type available, please select again')
+    
+    type_input = input('Please tell your preferred workout (Sprint, Gym, or Yoga) or Quit to back to the menu: ').strip().capitalize()
