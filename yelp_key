@@ -1,0 +1,97 @@
+
+import pandas as pd
+import requests as r
+import re
+import json
+import webbrowser as wb
+
+
+def yelppull():
+    
+    terms = [r'yoga', r'crossfit', r'gym', r'pilates', r'spin', r'cycling', r'hitt', r'running', r'rowing', r'boxing',r'weights', r'lifting', r'barre']
+    neighboorhoods = {'shadyside':'15206','oakland':'15213', 'squirrel hill': '15217'}
+    hoods = [r'shad', r'oak', r'hill', r'squirrel', r'squir']
+    found = False
+    url = 'https://api.yelp.com/v3/businesses/search'
+    headers = {'Content-Type': 'application/json', 'Authorization': 'Bearer N0sLSs9kdDymF47lLWwvgDlCIRoRmfte8nR6qjz9kYi-l6scoBxx7DVviB0z4SLHg6k7JADTS0-G36klY4Yd3lMYzbPuZ1eYqGZh4EPveHu8wlc9j4LKTkqIlm5PYXYx'}
+    query = {'raduis': '1'}
+    while found == False:
+        #Asks user for input of service and searches for it if found it is put into the query dict
+        value = input('Please provide the type of fitness service you are looking for: ' ).strip().lower()
+        for i in terms:
+            term = re.search(value, i)
+            if term != None:
+                query['term'] = i
+                found = True
+                break
+        if found == False:
+          print('Unable to find your search term! Pleae try another term')  
+    
+    found = False
+#Asks user for input of neighborhood and searches for it if found it is put into the query dict    
+    while found == False:
+        zip_code = input('Please tell us the Pittsburgh neighborhood you would like to search: ' ).strip().lower()
+        try:
+            if zip_code in neighboorhoods.keys():
+                query['location'] = neighboorhoods[zip_code]
+                found = True
+                break
+            else:
+                for i in hoods:
+                    hood = re.search(zip_code, i)
+                    if hood != None:
+                        for key in neighboorhoods.keys():
+                            hood = re.search(key, i)
+                            print(hood)
+                            if hood != None:
+                                query['location'] = neighboorhoods[key]    
+                                break
+                if found == False:
+                    print('Unable to find your search term! Please try another term')
+                    continue
+        except:
+          print('Unable to find your neighborhood! Pleae try another term')
+    #Performs an API using the Yelp API
+    try:
+        #runs the yelp API to pull the data for the search
+        req= r.get(url, params = query, headers=headers)      
+        data = json.loads(req.text)
+        data = pd.json_normalize(data['businesses'])
+        data['location.display_address'] = data['location.display_address'].apply(lambda x: ', '.join(x))
+        oldcols = ['name', 'rating', 'location.display_address']
+        newcols = ['Name', 'Rating', 'Address']
+        dcols = dict(zip(oldcols,newcols))
+        data2=data[['name', 'rating', 'location.display_address']].copy()
+        data2 = data2.rename(columns=dcols)
+        print(data2[['Name', 'Rating', 'Address']].sort_values('Rating',ascending=False).head(5))
+        found = False
+        #looks for the business in the results
+        while found != True:
+            res = input('Would you like more information about one of these {}? (Y/N): '.format(query['term'])).strip().lower()
+            if res == 'y':
+                res = input('Which Business?: ').strip()
+                for biz in data2['Name']:
+                    answer = re.search(biz, res )
+                    if answer != None:
+                        return res
+                    
+                if found == False:
+                    print('Unable to find your search term! Please try another term')
+                    continue
+            elif res == 'n':
+                print('Returning to main menu')
+                return
+            else:
+                print('Invalid')                 
+#if the user does not provide an acceptable answer it runs thourgh again     
+    except:
+        try_again= input('No results found. Would you like to try another term? (Y/N)').strip().lower()
+        if try_again == 'y':
+            yelppull()
+        elif try_again == 'n':
+            print('Returning to main menu')
+            return
+        
+        
+if __name__ == '__main__':
+    yelppull()        
