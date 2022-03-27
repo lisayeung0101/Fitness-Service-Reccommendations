@@ -1,0 +1,59 @@
+import requests as r
+import json
+import pandas as pd
+import webbrowser as wb
+import numpy as np
+
+AUTH_URL = 'https://accounts.spotify.com/api/token'
+pd.set_option("max_colwidth", 1000)
+
+CLIENT_ID = '116f7ec7440044aba066da31ec9b62f2'
+CLIENT_SECRET = 'db24afee0db0409ebc844c1dbe567780'
+
+auth_response = r.post(AUTH_URL, {
+    'grant_type': 'client_credentials',
+    'client_id': CLIENT_ID,
+    'client_secret': CLIENT_SECRET,
+})
+
+auth_response_data = auth_response.json()
+
+access_token = auth_response_data['access_token']
+
+headers = {'Authorization': 'Bearer {token}'.format(token=access_token)}
+
+url = 'https://api.spotify.com/v1/users/en184709/playlists'
+
+#API Code provided by Steven Morse https://stmorse.github.io/journal/spotify-api.html
+#Runs an API to grab the playlists from the profile
+req = r.get(url, headers=headers)
+data = json.loads(req.text)
+playlists = pd.json_normalize(data['items'])
+playlist = playlists[['name', 'description']].head(4).copy()
+newidx = dict(zip(np.arange(0,4), np.arange(1,5)))
+#reindex the playlist to match user options
+playlist = playlist.rename(index= newidx)
+#prints the options for the playlist
+print(playlist)
+sites = list(playlists['external_urls.spotify'].copy())
+#Ask the user for input
+user = input('Which one of these playlists would you like to Open(1,2,3, 4) or type quit to return to the main menu?: ').strip().lower()
+if user == 'quit':
+    print('Returning to Main Menu')
+#Opens the the spotify playlist website
+else:
+    try:
+        user = int(user)
+        if user == 1:
+            wb.open(sites[0], new=0, autoraise=True)
+        elif user == 2:
+            wb.open(sites[1], new=0, autoraise=True)
+        elif user == 3:
+            wb.open(sites[2], new=0, autoraise=True)
+        elif user == 4:
+            wb.open(sites[3], new=0, autoraise=True)
+        
+        else:
+            print('Not Valid! Please provide an interger in the offered range else type quit!')
+    except:
+        print('Not Valid! Please provide an interger in the offered range else type quit!')
