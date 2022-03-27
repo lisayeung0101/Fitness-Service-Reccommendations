@@ -1,0 +1,83 @@
+import yelp_key as yp
+import webscarp as ws
+import webbrowser as wb
+import re
+
+answer = ''
+
+while answer != 'quit' :
+    print('Helllo, Welcome to the Heinz Fitness App')
+    re.IGNORECASE
+    service_search = [r'fitn', r'serv', r'ness', r'vice', r'ser', r'fitt']
+    exercise_search = [r'exe', r'cise', r'exer', r'ecer']
+    #Ask the user for input
+    answer = input('Would you like to know about exercises or are you looking for a fitness service?').strip().lower()
+    #checks using Regex in case of an user error
+    check_service = [re.search(x, answer) for x in service_search if re.search(x, answer) != None]
+    check_exercise = [re.search(x, answer) for x in exercise_search if re.search(x, answer) != None]
+    
+    
+    if answer == 'fitness service':
+        #calls the yelppull
+        service = yp.yelppull()
+        #Trys to grab the social media and open it by call the webscrap module and the get_social functions
+        if service != None:
+                try:
+                    social = ws.get_socials(service)
+                    wb.open(social[0], new=0, autoraise=True)
+                except:
+                    try:
+                        wb.open(social[1], new=0, autoraise=True)
+                    except:
+                        print('Unable to find social media!')
+
+    #checks if the user mispelled fitness
+    elif len(check_service) > 0:
+        did = input('Did you mean fitness service? (y/n): ').lower().strip()
+        if did == 'y':
+            service = yp.yelppull()
+            if service != None:
+                try:
+                    social = ws.get_socials(service)
+                    wb.open(social[0], new=0, autoraise=True)
+                except:
+                    try:
+                        wb.open(social[1], new=0, autoraise=True)
+                    except:
+                        print('Unable to find social media!')
+        elif did == 'n':
+            continue
+        else:
+            continue
+    #Calls the exercise feature
+    elif answer == 'exercises':
+        import caloriescal
+    
+    #checks if the user mispelled exercise then calls if yes the exercise code
+    elif len(check_exercise) > 0:
+        did = input('Did you mean exercises? (y/n): ').lower().strip()
+        if did == 'y':
+            import caloriescal
+        elif did == 'n':
+            continue
+        else:
+            continue
+    #imports our easter egg for spotify playlists    
+    elif answer == 'secret playlist':
+        import easter 
+    #Ends program   
+    elif answer == 'quit':
+        continue
+    else:
+        print('Unable to find search term!')
+        continue
+        
+    answer = input('Would you like to search another term?: ').strip().lower()
+    
+    if answer == 'no' or answer == 'n':
+        answer = 'quit'
+    elif answer == 'quit':
+        answer = 'quit'
+    else:
+        answer = ''
+    
