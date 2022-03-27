@@ -1,0 +1,31 @@
+
+import requests
+from bs4 import BeautifulSoup
+import re 
+#Scrap from classpass to get socail media page on fitness services 
+def get_socials(gym):
+    insta = None
+    fb = None
+    gym_name = str(gym).replace(' ','-')
+    link = 'https://classpass.com/studios/' + gym_name 
+    page = requests.get(link)
+    soup = BeautifulSoup(page.content, 'html.parser')
+    #define pattern for social media 
+    ig_pattern = r'[i][n][s][t][a][g][r][a][m]'
+    fb_pattern = r'facebook'
+    data = soup.find_all(class_='_2MTzNd_HEKWjVL824SA9Li')
+    # Find the social media hyperlink and then match with re
+    for link in data:
+        href = link['href']
+        if re.search(ig_pattern, href) != None:
+          print('The instagram account is: ',href)
+          insta = href
+        if re.search(fb_pattern, href) != None:
+          print('The facebook account is: ',href)
+          fb = href
+          
+    if insta != None or fb != None:
+        return [insta,fb]
+          
+if __name__ == '__main__':
+    get_socials('yoga love pittsburgh')
